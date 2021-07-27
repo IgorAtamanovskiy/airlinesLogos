@@ -6,7 +6,8 @@ import os
 import argparse
 from urllib.parse import quote
 import logging
-
+import socket
+from socket import timeout
 
 def importLogos():
     # Set default values
@@ -74,13 +75,11 @@ def importLogos():
             else:
                 counter += 1
 
-    logging.info("=== Import complete successfully ===")
+    logging.info("=== Import complete ===")
 
 
 def getAirlines():
-    data = urllib.request.urlopen(
-        "https://api.travelpayouts.com/data/ru/airlines.json"
-    ).read()
+    data = urllib.request.urlopen("https://api.travelpayouts.com/data/ru/airlines.json").read()
     output = json.loads(data)
     return output
 
@@ -98,7 +97,14 @@ def saveAirlineLogo(airlineIATACode, height, width, path):
 
     filename = f"{imgFolder}/{airlineIATACode}.png"
 
-    urllib.request.urlretrieve(urlpng, filename)
+    socket.setdefaulttimeout(15)
+
+    try:
+        urllib.request.urlretrieve(urlpng, filename)
+    except (urllib.error.HTTPError, urllib.error.URLError) as error:
+        logging.error('Data of %s not retrieved because %s\nURL: %s', airlineIATACode, error, urlpng)
+    except timeout:
+        logging.error('Socket timed out - URL %s', urlpng)
 
 
 if __name__ == "__main__":
