@@ -7,3 +7,4 @@ Arguments
 --s - Start from 'n' item in airlines list
 --p - Path to save images
 --ln - Path to save logs
+--iata - Single IATA code of airline to download

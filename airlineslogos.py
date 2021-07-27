@@ -10,25 +10,27 @@ import logging
 
 def importLogos():
     # Set default values
-    defWidth=72
-    defHeight=24
-    defStartFrom=0
-    defSaveToPath="/airlines_logos/images"
-    defLogName="avialogos.log"
+    defWidth = 72
+    defHeight = 24
+    defStartFrom = 0
+    defSaveToPath = "/airlines_logos/images"
+    defLogName = "avialogos.log"
 
     # Init parameters
     parser = argparse.ArgumentParser(description="Airlines logos downloader")
     parser.add_argument("--w", default=defWidth, type=int, help="Width of the image")
     parser.add_argument("--h", default=defHeight, type=int, help="Height of the image")
     parser.add_argument(
-        "--s", default=defStartFrom, type=int, help="Start from 'n' item in airlines list"
+        "--s",
+        default=defStartFrom,
+        type=int,
+        help="Start from 'n' item in airlines list",
     )
     parser.add_argument(
         "--p", default=defSaveToPath, type=str, help="Path to save images"
     )
-    parser.add_argument(
-        "--ln", default=defLogName, type=str, help="Path to save logs"
-    )
+    parser.add_argument("--ln", default=defLogName, type=str, help="Path to save logs")
+    parser.add_argument("--iata", default="", type=str, help="Single IATA code of airline to download")
 
     args = parser.parse_args()
 
@@ -37,6 +39,7 @@ def importLogos():
     startFrom = args.s if args.s >= 0 else defStartFrom
     strLogosPath = args.p if args.p != "" else defSaveToPath
     strLogName = args.ln if args.ln != "" else defLogName
+    strIATAcode = args.iata if len(args.iata)==2 else ""
 
     # Init logging
     logging.basicConfig(
@@ -47,23 +50,29 @@ def importLogos():
     )
     logging.info("=== Application started ===")
     logging.info(
-        f"Import start with parameters: ImageHeight:{height}, ImageWidth:{width}, StartFromPosition:{startFrom}, SaveLogosTo:{strLogosPath}"
+        f"Import start with parameters: ImageHeight:{height}, ImageWidth:{width}, IATA:{strIATAcode}, StartFromPosition:{startFrom}, SaveLogosTo:{strLogosPath}"
     )
 
     # Start processing
-    counter = 0
-    airlinesobj = getAirlines()
+    if strIATAcode != "":
+        logging.info(f"Saving single logo for {strIATAcode}")
+        print(strIATAcode)
+        saveAirlineLogo(strIATAcode, height, width, strLogosPath)
 
-    logging.info(f"Found {len(airlinesobj)} airlines")
-    logging.info(f"Starting import from {startFrom} position")
+    else:
+        counter = 0
+        airlinesobj = getAirlines()
 
-    for x in airlinesobj:
-        if counter >= startFrom:
-            print(x["code"])
-            saveAirlineLogo(x["code"], height, width, strLogosPath)
-            counter += 1
-        else:
-            counter += 1
+        logging.info(f"Found {len(airlinesobj)} airlines")
+        logging.info(f"Starting import from {startFrom} position")
+
+        for x in airlinesobj:
+            if counter >= startFrom:
+                print(x["code"])
+                saveAirlineLogo(x["code"], height, width, strLogosPath)
+                counter += 1
+            else:
+                counter += 1
 
     logging.info("=== Import complete successfully ===")
 
