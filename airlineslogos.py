@@ -60,7 +60,6 @@ def importLogos():
         logging.info(f"Saving single logo for {strIATAcode}")
         print(strIATAcode)
         saveAirlineLogo(strIATAcode, height, width, strLogosPath)
-
     else:
         counter = 0
         airlinesobj = getAirlines()
@@ -75,18 +74,14 @@ def importLogos():
                 counter += 1
             else:
                 counter += 1
-
     logging.info("=== Import complete ===")
-
 
 def getAirlines():
     data = urllib.request.urlopen("https://api.travelpayouts.com/data/ru/airlines.json").read()
     output = json.loads(data)
     return output
 
-
 def saveAirlineLogo(airlineIATACode, height, width, path):
-
     urlpng = (
         f"https://pics.avs.io/{width}/{height}/{format(quote(airlineIATACode))}.png"
     )
