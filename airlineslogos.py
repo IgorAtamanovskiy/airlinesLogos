@@ -16,7 +16,7 @@ def importLogos():
     defHeight = 24
     defStartFrom = 0
     defSaveToPath = "/airlines_logos/images"
-    defLogName = "avialogos.log"
+    defLogName = "app_logs.log"
 
     # Init parameters
     parser = argparse.ArgumentParser(description="Airlines logos downloader")
