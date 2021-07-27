@@ -98,14 +98,22 @@ def saveAirlineLogo(airlineIATACode, height, width, path):
     filename = f"{imgFolder}/{airlineIATACode}.png"
 
     socket.setdefaulttimeout(15)
+    remaining_download_tries = 3
 
-    try:
-        urllib.request.urlretrieve(urlpng, filename)
-    except (urllib.error.HTTPError, urllib.error.URLError) as error:
-        logging.error('Data of %s not retrieved because %s\nURL: %s', airlineIATACode, error, urlpng)
-    except timeout:
-        logging.error('Socket timed out - URL %s', urlpng)
-
+    while remaining_download_tries > 0:
+        try:
+            urllib.request.urlretrieve(urlpng, filename)
+        except (urllib.error.HTTPError, urllib.error.URLError) as error:
+            remaining_download_tries = remaining_download_tries - 1
+            logging.error(f"Data of {airlineIATACode} not retrieved because {error} URL: {urlpng}")
+            continue
+        except timeout:
+            remaining_download_tries = remaining_download_tries - 1
+            logging.error(f"Socket timed out - URL {urlpng}")
+            continue
+        else:
+            logging.info(f"Succeed download: {urlpng}")
+            break
 
 if __name__ == "__main__":
     importLogos()
