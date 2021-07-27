@@ -8,6 +8,7 @@ from urllib.parse import quote
 import logging
 import socket
 from socket import timeout
+import ssl
 
 def importLogos():
     # Set default values
@@ -98,11 +99,14 @@ def saveAirlineLogo(airlineIATACode, height, width, path):
     filename = f"{imgFolder}/{airlineIATACode}.png"
 
     socket.setdefaulttimeout(15)
+    ssl._create_default_https_context = ssl._create_unverified_context
+
     remaining_download_tries = 3
 
     while remaining_download_tries > 0:
         try:
             urllib.request.urlretrieve(urlpng, filename)
+
         except (urllib.error.HTTPError, urllib.error.URLError) as error:
             remaining_download_tries = remaining_download_tries - 1
             logging.error(f"Data of {airlineIATACode} not retrieved because {error} URL: {urlpng}")
