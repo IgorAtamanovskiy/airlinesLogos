@@ -10,6 +10,7 @@ import socket
 from socket import timeout
 import ssl
 
+
 def importLogos():
     # Set default values
     defWidth = 72
@@ -17,11 +18,15 @@ def importLogos():
     defStartFrom = 0
     defSaveToPath = "/airlines_logos/images"
     defLogName = "app_logs.log"
+    defGetRetina = 0
 
     # Init parameters
     parser = argparse.ArgumentParser(description="Airlines logos downloader")
     parser.add_argument("--w", default=defWidth, type=int, help="Width of the image")
     parser.add_argument("--h", default=defHeight, type=int, help="Height of the image")
+    parser.add_argument(
+        "--rtn", default=defGetRetina, type=int, help="Get image for retina display"
+    )
     parser.add_argument(
         "--s",
         default=defStartFrom,
@@ -32,16 +37,19 @@ def importLogos():
         "--p", default=defSaveToPath, type=str, help="Path to save images"
     )
     parser.add_argument("--ln", default=defLogName, type=str, help="Path to save logs")
-    parser.add_argument("--iata", default="", type=str, help="Single IATA code of airline to download")
+    parser.add_argument(
+        "--iata", default="", type=str, help="Single IATA code of airline to download"
+    )
 
     args = parser.parse_args()
 
     height = args.h if args.h > 0 else defHeight
     width = args.w if args.w > 0 else defWidth
+    retinaImage = args.rtn if args.rtn > 0 else defGetRetina
     startFrom = args.s if args.s >= 0 else defStartFrom
     strLogosPath = args.p if args.p != "" else defSaveToPath
     strLogName = args.ln if args.ln != "" else defLogName
-    strIATAcode = args.iata if len(args.iata)==2 else ""
+    strIATAcode = args.iata if len(args.iata) == 2 else ""
 
     # Init logging
     logging.basicConfig(
@@ -52,14 +60,14 @@ def importLogos():
     )
     logging.info("=== Application started ===")
     logging.info(
-        f"Import start with parameters: ImageHeight:{height}, ImageWidth:{width}, IATA:{strIATAcode}, StartFromPosition:{startFrom}, SaveLogosTo:{strLogosPath}"
+        f"Import start with parameters: ImageHeight:{height}, ImageWidth:{width}, IATA:{strIATAcode}, StartFromPosition:{startFrom}, GetRetinaImage:{retinaImage}, SaveLogosTo:{strLogosPath}"
     )
 
     # Start processing
     if strIATAcode != "":
         logging.info(f"Saving single logo for {strIATAcode}")
         print(strIATAcode)
-        saveAirlineLogo(strIATAcode, height, width, strLogosPath)
+        saveAirlineLogo(strIATAcode, height, width, strLogosPath, retinaImage)
     else:
         counter = 0
         airlinesobj = getAirlines()
@@ -70,21 +78,28 @@ def importLogos():
         for x in airlinesobj:
             if counter >= startFrom:
                 print(x["code"])
-                saveAirlineLogo(x["code"], height, width, strLogosPath)
+                saveAirlineLogo(x["code"], height, width, strLogosPath, retinaImage)
                 counter += 1
             else:
                 counter += 1
     logging.info("=== Import complete ===")
 
+
 def getAirlines():
-    data = urllib.request.urlopen("https://api.travelpayouts.com/data/ru/airlines.json").read()
+    data = urllib.request.urlopen(
+        "https://api.travelpayouts.com/data/ru/airlines.json"
+    ).read()
     output = json.loads(data)
     return output
 
-def saveAirlineLogo(airlineIATACode, height, width, path):
-    urlpng = (
-        f"https://pics.avs.io/{width}/{height}/{format(quote(airlineIATACode))}.png"
-    )
+
+def saveAirlineLogo(airlineIATACode, height, width, path, retina):
+    if retina == 0:
+        urlpng = (
+            f"https://pics.avs.io/{width}/{height}/{format(quote(airlineIATACode))}.png"
+        )
+    else:
+        urlpng = f"https://pics.avs.io/{width}/{height}/{format(quote(airlineIATACode))}@2x.png"
 
     imgFolder = f"{path}/{height}x{width}"
 
@@ -104,7 +119,9 @@ def saveAirlineLogo(airlineIATACode, height, width, path):
 
         except (urllib.error.HTTPError, urllib.error.URLError) as error:
             remaining_download_tries = remaining_download_tries - 1
-            logging.error(f"Data of {airlineIATACode} not retrieved because {error} URL: {urlpng}")
+            logging.error(
+                f"Data of {airlineIATACode} not retrieved because {error} URL: {urlpng}"
+            )
             continue
         except timeout:
             remaining_download_tries = remaining_download_tries - 1
@@ -113,6 +130,7 @@ def saveAirlineLogo(airlineIATACode, height, width, path):
         else:
             logging.info(f"Succeed download: {urlpng}")
             break
+
 
 if __name__ == "__main__":
     importLogos()
